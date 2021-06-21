@@ -1,0 +1,7 @@
+__pycache__
+
+# Environment
+venv/
+
+# Configuration files
+config.ini
