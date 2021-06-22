@@ -4,4 +4,10 @@ __pycache__
 venv/
 
 # Configuration files
-config.ini
+.env
+
+.idea
+
+# Requirements.in
+dev-requirements.in
+requirements.in
