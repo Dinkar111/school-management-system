@@ -1,137 +1,110 @@
-from psycopg2 import InternalError
+from abstract.person import Person
 
 
-class Student:
+class Student(Person):
 
-    def __init__(self, s_id=None, first_name=None, last_name=None, password=None, address=None, phone=None, email=None):
-        self.s_id = s_id
-        self.first_name = first_name
-        self.last_name = last_name
-        self.password = password
-        self.address = address
-        self.phone = phone
-        self.email = email
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.role = 1
 
     # Insert student query
-    def insert_student(self, db):
+    def insert(self, db):
         insert_student_query = '''
-        INSERT INTO students(s_first_name, s_last_name, s_password, s_address, s_phone, s_email)
-        VALUES (%s, %s, %s, %s, %s, %s)
+        INSERT INTO students(first_name, last_name, password, address, phone, email, role_id)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
         '''
-        return db.execute(insert_student_query, (self.first_name, self.last_name, self.password, self.address, self.phone, self.email ))
+        db.execute(insert_student_query, (self.first_name, self.last_name, self.password,
+                                          self.address, self.phone, self.email, self.role))
+        db.execute("SELECT student_id FROM students WHERE email=%s", (self.email,))
+        return db.fetchone()
 
-    # Check if Email already exist in the student table
-    def check_email_exist(self, db):
-        try:
-            query = "SELECT * FROM students WHERE s_email=%s"
-            query_obj = db.execute(query, (self.email,))
-            return query_obj.fetchone()
-        except InternalError as error:
-            print(error)
-
-    # Check if phone already exist in the student table
-    def check_phone_exist(self, db):
-        try:
-            query = "SELECT * FROM students WHERE s_phone=%s"
-            query_obj = db.execute(query, (self.phone,))
-            return query_obj.fetchone()
-        except InternalError as error:
-            print(error)
-
-    # get Student by email and password for login the student
-    def get_student_by_email_password(self, db):
-        try:
-            login_query = "SELECT * FROM students WHERE s_email=%s AND s_password=%s"
-            query_obj = db.execute(login_query, (self.email, self.password,))
-            return query_obj.fetchone()
-        except InternalError as error:
-            print(error)
+    # get Student by email and password to login the student
+    def get_by_email_password(self, db):
+        login_query = "SELECT student_id FROM students WHERE email=%s AND password=%s"
+        db.execute(login_query, (self.email, self.password,))
+        return db.fetchone()
 
     # get Student by id after login and use id as a token
     def get_user_by_id(self, db):
-        try:
-            query = "SELECT * FROM students WHERE s_id=%s"
-            student_obj = db.execute(query, (self.s_id,))
-            return student_obj.fetchone()
-        except InternalError as error:
-            print(error)
+        query = '''
+        select s.student_id, CONCAT(s.first_name,' ',s.last_name) AS student_name, s.address, s.phone, s.email,
+        sub.subject_name, CONCAT(t.first_name,' ',t.last_name) AS teacher_name FROM students_subjects SS
+        INNER JOIN students s
+            ON  SS.student_id = S.student_id
+        INNER JOIN subjects Sub
+            ON SS.subject_id = Sub.subject_id
+        LEFT JOIN teachers_subjects TS
+            ON TS.subject_id = Sub.subject_id
+        LEFT JOIN teachers t  
+            ON TS.teacher_id = T.teacher_id
+        where s.student_id = %s
+        '''
+        db.execute(query, (self.user_id,))
+        return db.fetchone()
 
-    # get all student profile without student id and password
-    def get_all_profile_to_view_only(self, db):
-        try:
-            s_id = self.s_id
-            query = '''
-            SELECT CONCAT(s_first_name, ' ', s_last_name) as full_name, s_address, s_phone, s_email FROM students;
-            '''
-            students_obj = db.execute(query)
-            return students_obj.fetchall()
-        except InternalError as error:
-            print(error)
+    # get all student profile
+    def get_all_profile_to_view(self, db):
+        query = '''
+        SELECT student_id, first_name, last_name, address, email, phone FROM students
+        INNER JOIN roles
+        ON students.role_id = roles.role_id
+        '''
+        db.execute(query)
+        return db.fetchall()
 
     # Update student name
-    def update_student_name(self, db):
-        try:
-            query = """
-            UPDATE students
-            SET s_first_name=%s,s_last_name=%s
-            WHERE s_id=%s
-            """
-            return db.execute(query, (self.first_name, self.last_name, self.s_id,))
-        except InternalError as error:
-            print(error)
+    def update_name(self, db):
+        query = """
+        UPDATE students
+        SET first_name=%s,last_name=%s
+        WHERE student_id=%s
+        """
+        db.execute(query, (self.first_name, self.last_name, self.user_id,))
 
     # Update student password
-    def update_student_password(self, db):
-        try:
-            query = '''
-            UPDATE students
-            SET s_password=%s
-            WHERE s_id=%s
-            '''
-            return db.execute(query, (self.password, self.s_id,))
-        except InternalError as error:
-            print(error)
+    def update_password(self, db):
+        query = '''
+        UPDATE students
+        SET password=%s
+        WHERE student_id=%s
+        '''
+        db.execute(query, (self.password, self.user_id,))
 
     # Update student address
-    def update_student_address(self, db):
-        try:
-            query = '''
-            UPDATE students
-            SET s_address=%s
-            WHERE s_id=%s
-            '''
-            return db.execute(query, (self.address, self.s_id,))
-        except InternalError as error:
-            print(error)
+    def update_address(self, db):
+        query = '''
+        UPDATE students
+        SET address=%s
+        WHERE student_id=%s
+        '''
+        db.execute(query, (self.address, self.user_id,))
 
     # Update student phone
-    def update_student_phone(self, db):
-        try:
-            query = '''
-            UPDATE students
-            SET s_phone=%s
-            WHERE s_id=%s
-            '''
-            return db.execute(query, (self.phone, self.s_id,))
-        except InternalError as error:
-            print(error)
+    def update_phone(self, db):
+        query = '''
+        UPDATE students
+        SET phone=%s
+        WHERE student_id=%s
+        '''
+        db.execute(query, (self.phone, self.user_id,))
 
     # Update student email
-    def update_student_email(self, db):
-        try:
-            query = '''
-            UPDATE students
-            SET s_email=%s
-            WHERE s_id=%s
-            '''
-            return db.execute(query, (self.email, self.s_id,))
-        except InternalError as error:
-            print(error)
+    def update_email(self, db):
+        query = '''
+        UPDATE students
+        SET email=%s
+        WHERE student_id=%s
+        '''
+        db.execute(query, (self.email, self.user_id,))
 
     # Delete this student
     def delete(self, db):
-        try:
-            query = "DELETE FROM students WHERE s_id=%s"
-            return db.execute(query, (self.s_id,))
-        except InternalError as error:
-            print(error)
+        query = "DELETE FROM students WHERE student_id=%s"
+        db.execute(query, (self.user_id,))
+
+    def add_student_and_subject(self, db, subject_id):
+        student_and_subject = '''
+            INSERT INTO students_subjects(subject_id, student_id) VALUES (%s, %s)
+        '''
+        db.execute(student_and_subject, (subject_id, self.user_id, ))
+        return True

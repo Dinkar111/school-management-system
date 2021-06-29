@@ -1,16 +1,16 @@
-from .student import Student
+from .teacher import Teacher
 from helpers.validations import email_validation, phone_validation, password_validation
 from subjects.subject import Subject
 from simple_term_menu import TerminalMenu
 
 
-class ManageStudent(Student):
+class TeacherManager(Teacher):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.subject_obj = Subject()
 
-    # Register Student
-    def register_student(self, db):
+    # Register Teacher
+    def register_teacher(self, db):
         if password_validation(self.password) and phone_validation(self.phone) and email_validation(self.email):
             check_email = self.check_email_exist(db)
             check_phone = self.check_phone_exist(db)
@@ -25,27 +25,27 @@ class ManageStudent(Student):
                     "message": "Email already Exist."
                 }
             else:
-                student = self.insert(db)
-                self.user_id = student['student_id']
-                self.add_students_subjects(db)
+                teacher = self.insert(db)
+                self.user_id = teacher['teacher_id']
+                self.add_teachers_subjects(db)
                 return {
                     "status": 200,
-                    "message": "Student has been admitted."
+                    "message": "Teacher has been added."
                 }
 
-    # Login Student
-    def login_student(self, db):
-        student = self.get_by_email_password(db)
-        if not student:
+    # Login Teacher
+    def login_teacher(self, db):
+        teacher = self.get_by_email_password(db)
+        if not teacher:
             return {
                 "status": 401,
                 "message": "Email or password must have been incorrect. Please Try again"
             }
         else:
-            self.user_id = student['student_id']
+            self.user_id = teacher['teacher_id']
             return {
                 "status": 200,
-                "student_id": self.user_id,
+                "teacher_id": self.user_id,
                 "message": "Logged in"
             }
 
@@ -60,12 +60,11 @@ class ManageStudent(Student):
         else:
             return {
                 "status": 200,
-                "student_name": profile['student_name'],
+                "full_name": profile['full_name'],
                 "address": profile['address'],
                 "phone": profile['phone'],
                 "email": profile['email'],
-                "subject_name": profile['subject_name'],
-                "teacher_name": profile['teacher_name']
+                "subject_name": profile['subject_name']
             }
 
     # Get all student profile
@@ -74,7 +73,7 @@ class ManageStudent(Student):
         return all_profiles
 
     # Update name
-    def update_student_name(self, db):
+    def update_teacher_name(self, db):
         first_name = input("Update First Name: ")
         last_name = input("Update Last Name: ")
         self.first_name = first_name
@@ -86,7 +85,7 @@ class ManageStudent(Student):
         }
 
     # Update password
-    def update_student_password(self, db):
+    def update_teacher_password(self, db):
         password = input("Update Password: ")
         if not password_validation(password):
             return {
@@ -102,7 +101,7 @@ class ManageStudent(Student):
             }
 
     # Update address
-    def update_student_address(self, db):
+    def update_teacher_address(self, db):
         address = input("Update Address: ")
         self.address = address
         self.update_address(db)
@@ -112,7 +111,7 @@ class ManageStudent(Student):
         }
 
     # Update phone
-    def update_student_phone(self, db):
+    def update_teacher_phone(self, db):
         phone = input("Update Phone Number: ")
         if not phone_validation(phone):
             return {
@@ -128,7 +127,7 @@ class ManageStudent(Student):
             }
 
     # Update email
-    def update_student_email(self, db):
+    def update_teacher_email(self, db):
         email = input("Update Email: ")
         if not email_validation(email):
             return {
@@ -140,25 +139,25 @@ class ManageStudent(Student):
             check_email = self.check_email_exist(db)
             if check_email:
                 print("\n   Email already exist\n")
-                self.update_student_email(db)
-            else:
                 self.update_email(db)
+            else:
+                self.update_teacher_email(db)
                 return {
                     "status": 200,
                     "message": "Email has been updated to {}".format(self.email)
                 }
 
-    # Delete Student
-    def delete_student(self, db):
+    # Delete Teacher
+    def delete_teacher(self, db):
         self.delete(db)
         return {
             "status": 200,
-            "message": "Student deleted"
+            "message": "Teacher deleted"
         }
 
-    # Add subject to students
-    def add_students_subjects(self, db):
-        print("\n Select subject you want to study: ")
+    # Add subject to teachers
+    def add_teachers_subjects(self, db):
+        print("\n Select subject you teach: ")
         subjects = self.subject_obj.view_all_subject(db)
         subject_name = [subject['subject_name'] for subject in subjects]
         terminal = TerminalMenu(subject_name)
@@ -166,7 +165,7 @@ class ManageStudent(Student):
         self.subject_obj.subject_name = subject_name[show]
         check = self.subject_obj.check_subject_exist(db)
         subject_id = check['subject_id']
-        added_subject = self.add_student_and_subject(db, subject_id)
+        added_subject = self.add_teacher_and_subject(db, subject_id)
         if not added_subject:
             return {
                 "status": 500,
@@ -177,5 +176,4 @@ class ManageStudent(Student):
                 "status": 200,
                 "message": "Subject has been added to your profile"
             }
-
 
