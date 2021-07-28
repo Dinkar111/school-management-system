@@ -2,14 +2,7 @@ __pycache__
 
 .pytest_cache/
 
-# Environment
-venv/
-
 # Configuration files
 .env
 
 .idea
-
-# Requirements.in
-dev-requirements.in
-requirements.in

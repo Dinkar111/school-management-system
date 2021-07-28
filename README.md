@@ -13,5 +13,13 @@
 #### To install dev-requirements.txt
 
 	pip-sync dev-requirements.txt
+
+#### To add admin
+
+    python3 admin.py -email <email> -password <password>
+
+#### To run the cli program
+
+    python3 main.py
 		
 

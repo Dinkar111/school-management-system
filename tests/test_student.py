@@ -1,25 +1,20 @@
-
-def test_login(db_setup, student_manager):
-    db = db_setup
-    student = student_manager
-    student.email = "rajeshhamal@gmail.com"
-    student.password = "rajeshdai"
-    login = student.login_student(db)
-    assert login
+def test_login(user_manager):
+    email = "ram@s.com"
+    password = "Password@123"
+    login = user_manager.login_user(email, password)
+    assert login["status"] == 200
+    assert login["message"] == "Logged in"
 
 
-def test_get_user_by_id(db_setup, student_manager):
-    db = db_setup
-    student = student_manager
-    student.s_id = 3
-    user = student.get_user_by_id(db)
-    expected_return = [3, 'Rajesh', 'Hamal', 'rajeshdai', 'Lazimpat', 9841470814, 'rajeshhamal@gmail.com']
-    assert user == expected_return
-
-
-def test_check_email_exist(db_setup, student_manager):
-    db = db_setup
-    student = student_manager
-    student.email = "dinkarmaharjan@gmail.com"
-    check_student = student.check_email_exist(db)
-    assert check_student
+def test_student_register(student_manager):
+    register = student_manager.register_student(
+        first_name="Ram",
+        last_name="Laxman",
+        email="ram@s.com",
+        password="Password@123",
+        address="Janakpur",
+        phone="9841707744",
+        grade=1,
+    )
+    assert register["status"] == 200
+    assert register["message"] == "Student has been admitted."
